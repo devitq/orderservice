@@ -21,7 +21,7 @@ var (
 
 type OrderServiceServer struct {
 	pb.UnimplementedOrderServiceServer
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	orders map[string]*pb.Order
 }
 
@@ -47,8 +47,8 @@ func (s *OrderServiceServer) CreateOrder(ctx context.Context, req *pb.CreateOrde
 }
 
 func (s *OrderServiceServer) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	order, ok := s.orders[req.Id]
 	if !ok {
@@ -88,8 +88,8 @@ func (s *OrderServiceServer) DeleteOrder(ctx context.Context, req *pb.DeleteOrde
 }
 
 func (s *OrderServiceServer) ListOrders(ctx context.Context, req *pb.ListOrdersRequest) (*pb.ListOrdersResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	orders := make([]*pb.Order, 0, len(s.orders))
 	for _, o := range s.orders {
