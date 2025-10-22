@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -14,7 +16,7 @@ import (
 )
 
 var (
-	OrderNotFoundErr = errors.New("order not found")
+	ErrOrderNotFound = errors.New("order not found")
 )
 
 type OrderServiceServer struct {
@@ -50,7 +52,7 @@ func (s *OrderServiceServer) GetOrder(ctx context.Context, req *pb.GetOrderReque
 
 	order, ok := s.orders[req.Id]
 	if !ok {
-		return nil, OrderNotFoundErr
+		return nil, ErrOrderNotFound
 	}
 
 	return &pb.GetOrderResponse{Order: order}, nil
@@ -62,7 +64,7 @@ func (s *OrderServiceServer) UpdateOrder(ctx context.Context, req *pb.UpdateOrde
 
 	order, ok := s.orders[req.Id]
 	if !ok {
-		return nil, OrderNotFoundErr
+		return nil, ErrOrderNotFound
 	}
 
 	order.Item = req.Item
@@ -77,7 +79,7 @@ func (s *OrderServiceServer) DeleteOrder(ctx context.Context, req *pb.DeleteOrde
 
 	_, ok := s.orders[req.Id]
 	if !ok {
-		return nil, OrderNotFoundErr
+		return nil, ErrOrderNotFound
 	}
 
 	delete(s.orders, req.Id)
@@ -98,7 +100,10 @@ func (s *OrderServiceServer) ListOrders(ctx context.Context, req *pb.ListOrdersR
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	port := flag.Int("port", 50051, "port to run grpc error on")
+	flag.Parse()
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
