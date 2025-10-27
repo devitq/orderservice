@@ -25,7 +25,6 @@ func (i *LoggerInterceptor) Unary() grpc.UnaryServerInterceptor {
 		start := time.Now()
 
 		log.Printf("gRPC method %s called", info.FullMethod)
-		log.Printf("Request: %+v", req)
 
 		resp, err := handler(ctx, req)
 
@@ -39,7 +38,6 @@ func (i *LoggerInterceptor) Unary() grpc.UnaryServerInterceptor {
 				log.Printf("Error: %v, Duration: %v", err, duration)
 			}
 		} else {
-			log.Printf("Response: %+v", resp)
 			log.Printf("Method %s completed in %v", info.FullMethod, duration)
 		}
 
