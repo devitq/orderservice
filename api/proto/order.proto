@@ -1,9 +1,7 @@
 syntax = "proto3";
+package order;
 
-option go_package = "pkg/api/test";
-
-
-package api;
+option go_package = "pkg/api/order";
 
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
@@ -23,7 +21,6 @@ message CreateOrderRequest {
   string item = 1;
   int32 quantity = 2;
 }
-
 message CreateOrderResponse {
   string id = 1;
 }
@@ -31,7 +28,6 @@ message CreateOrderResponse {
 message GetOrderRequest {
   string id = 1;
 }
-
 message GetOrderResponse {
   Order order = 1;
 }
@@ -41,7 +37,6 @@ message UpdateOrderRequest {
   string item = 2;
   int32 quantity = 3;
 }
-
 message UpdateOrderResponse {
   Order order = 1;
 }
@@ -49,13 +44,11 @@ message UpdateOrderResponse {
 message DeleteOrderRequest {
   string id = 1;
 }
-
 message DeleteOrderResponse {
   bool success = 1;
 }
 
 message ListOrdersRequest {}
-
 message ListOrdersResponse {
   repeated Order orders = 1;
 }

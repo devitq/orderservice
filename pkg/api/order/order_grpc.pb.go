@@ -4,11 +4,10 @@
 // - protoc             v3.19.6
 // source: api/proto/order.proto
 
-package test
+package order
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,11 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OrderService_CreateOrder_FullMethodName = "/api.OrderService/CreateOrder"
-	OrderService_GetOrder_FullMethodName    = "/api.OrderService/GetOrder"
-	OrderService_UpdateOrder_FullMethodName = "/api.OrderService/UpdateOrder"
-	OrderService_DeleteOrder_FullMethodName = "/api.OrderService/DeleteOrder"
-	OrderService_ListOrders_FullMethodName  = "/api.OrderService/ListOrders"
+	OrderService_CreateOrder_FullMethodName = "/order.OrderService/CreateOrder"
+	OrderService_GetOrder_FullMethodName    = "/order.OrderService/GetOrder"
+	OrderService_UpdateOrder_FullMethodName = "/order.OrderService/UpdateOrder"
+	OrderService_DeleteOrder_FullMethodName = "/order.OrderService/DeleteOrder"
+	OrderService_ListOrders_FullMethodName  = "/order.OrderService/ListOrders"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -245,7 +244,7 @@ func _OrderService_ListOrders_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var OrderService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.OrderService",
+	ServiceName: "order.OrderService",
 	HandlerType: (*OrderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

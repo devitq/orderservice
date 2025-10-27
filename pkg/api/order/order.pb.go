@@ -4,15 +4,14 @@
 // 	protoc        v3.19.6
 // source: api/proto/order.proto
 
-package test
+package order
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -542,7 +541,7 @@ var File_api_proto_order_proto protoreflect.FileDescriptor
 
 const file_api_proto_order_proto_rawDesc = "" +
 	"\n" +
-	"\x15api/proto/order.proto\x12\x03api\"G\n" +
+	"\x15api/proto/order.proto\x12\x05order\"G\n" +
 	"\x05Order\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04item\x18\x02 \x01(\tR\x04item\x12\x1a\n" +
@@ -553,32 +552,29 @@ const file_api_proto_order_proto_rawDesc = "" +
 	"\x13CreateOrderResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"!\n" +
 	"\x0fGetOrderRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"4\n" +
-	"\x10GetOrderResponse\x12 \n" +
-	"\x05order\x18\x01 \x01(\v2\n" +
-	".api.OrderR\x05order\"T\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"6\n" +
+	"\x10GetOrderResponse\x12\"\n" +
+	"\x05order\x18\x01 \x01(\v2\f.order.OrderR\x05order\"T\n" +
 	"\x12UpdateOrderRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04item\x18\x02 \x01(\tR\x04item\x12\x1a\n" +
-	"\bquantity\x18\x03 \x01(\x05R\bquantity\"7\n" +
-	"\x13UpdateOrderResponse\x12 \n" +
-	"\x05order\x18\x01 \x01(\v2\n" +
-	".api.OrderR\x05order\"$\n" +
+	"\bquantity\x18\x03 \x01(\x05R\bquantity\"9\n" +
+	"\x13UpdateOrderResponse\x12\"\n" +
+	"\x05order\x18\x01 \x01(\v2\f.order.OrderR\x05order\"$\n" +
 	"\x12DeleteOrderRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"/\n" +
 	"\x13DeleteOrderResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x13\n" +
-	"\x11ListOrdersRequest\"8\n" +
-	"\x12ListOrdersResponse\x12\"\n" +
-	"\x06orders\x18\x01 \x03(\v2\n" +
-	".api.OrderR\x06orders2\xcc\x02\n" +
-	"\fOrderService\x12@\n" +
-	"\vCreateOrder\x12\x17.api.CreateOrderRequest\x1a\x18.api.CreateOrderResponse\x127\n" +
-	"\bGetOrder\x12\x14.api.GetOrderRequest\x1a\x15.api.GetOrderResponse\x12@\n" +
-	"\vUpdateOrder\x12\x17.api.UpdateOrderRequest\x1a\x18.api.UpdateOrderResponse\x12@\n" +
-	"\vDeleteOrder\x12\x17.api.DeleteOrderRequest\x1a\x18.api.DeleteOrderResponse\x12=\n" +
+	"\x11ListOrdersRequest\":\n" +
+	"\x12ListOrdersResponse\x12$\n" +
+	"\x06orders\x18\x01 \x03(\v2\f.order.OrderR\x06orders2\xe0\x02\n" +
+	"\fOrderService\x12D\n" +
+	"\vCreateOrder\x12\x19.order.CreateOrderRequest\x1a\x1a.order.CreateOrderResponse\x12;\n" +
+	"\bGetOrder\x12\x16.order.GetOrderRequest\x1a\x17.order.GetOrderResponse\x12D\n" +
+	"\vUpdateOrder\x12\x19.order.UpdateOrderRequest\x1a\x1a.order.UpdateOrderResponse\x12D\n" +
+	"\vDeleteOrder\x12\x19.order.DeleteOrderRequest\x1a\x1a.order.DeleteOrderResponse\x12A\n" +
 	"\n" +
-	"ListOrders\x12\x16.api.ListOrdersRequest\x1a\x17.api.ListOrdersResponseB\x0eZ\fpkg/api/testb\x06proto3"
+	"ListOrders\x12\x18.order.ListOrdersRequest\x1a\x19.order.ListOrdersResponseB\x0fZ\rpkg/api/orderb\x06proto3"
 
 var (
 	file_api_proto_order_proto_rawDescOnce sync.Once
@@ -594,32 +590,32 @@ func file_api_proto_order_proto_rawDescGZIP() []byte {
 
 var file_api_proto_order_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_api_proto_order_proto_goTypes = []any{
-	(*Order)(nil),               // 0: api.Order
-	(*CreateOrderRequest)(nil),  // 1: api.CreateOrderRequest
-	(*CreateOrderResponse)(nil), // 2: api.CreateOrderResponse
-	(*GetOrderRequest)(nil),     // 3: api.GetOrderRequest
-	(*GetOrderResponse)(nil),    // 4: api.GetOrderResponse
-	(*UpdateOrderRequest)(nil),  // 5: api.UpdateOrderRequest
-	(*UpdateOrderResponse)(nil), // 6: api.UpdateOrderResponse
-	(*DeleteOrderRequest)(nil),  // 7: api.DeleteOrderRequest
-	(*DeleteOrderResponse)(nil), // 8: api.DeleteOrderResponse
-	(*ListOrdersRequest)(nil),   // 9: api.ListOrdersRequest
-	(*ListOrdersResponse)(nil),  // 10: api.ListOrdersResponse
+	(*Order)(nil),               // 0: order.Order
+	(*CreateOrderRequest)(nil),  // 1: order.CreateOrderRequest
+	(*CreateOrderResponse)(nil), // 2: order.CreateOrderResponse
+	(*GetOrderRequest)(nil),     // 3: order.GetOrderRequest
+	(*GetOrderResponse)(nil),    // 4: order.GetOrderResponse
+	(*UpdateOrderRequest)(nil),  // 5: order.UpdateOrderRequest
+	(*UpdateOrderResponse)(nil), // 6: order.UpdateOrderResponse
+	(*DeleteOrderRequest)(nil),  // 7: order.DeleteOrderRequest
+	(*DeleteOrderResponse)(nil), // 8: order.DeleteOrderResponse
+	(*ListOrdersRequest)(nil),   // 9: order.ListOrdersRequest
+	(*ListOrdersResponse)(nil),  // 10: order.ListOrdersResponse
 }
 var file_api_proto_order_proto_depIdxs = []int32{
-	0,  // 0: api.GetOrderResponse.order:type_name -> api.Order
-	0,  // 1: api.UpdateOrderResponse.order:type_name -> api.Order
-	0,  // 2: api.ListOrdersResponse.orders:type_name -> api.Order
-	1,  // 3: api.OrderService.CreateOrder:input_type -> api.CreateOrderRequest
-	3,  // 4: api.OrderService.GetOrder:input_type -> api.GetOrderRequest
-	5,  // 5: api.OrderService.UpdateOrder:input_type -> api.UpdateOrderRequest
-	7,  // 6: api.OrderService.DeleteOrder:input_type -> api.DeleteOrderRequest
-	9,  // 7: api.OrderService.ListOrders:input_type -> api.ListOrdersRequest
-	2,  // 8: api.OrderService.CreateOrder:output_type -> api.CreateOrderResponse
-	4,  // 9: api.OrderService.GetOrder:output_type -> api.GetOrderResponse
-	6,  // 10: api.OrderService.UpdateOrder:output_type -> api.UpdateOrderResponse
-	8,  // 11: api.OrderService.DeleteOrder:output_type -> api.DeleteOrderResponse
-	10, // 12: api.OrderService.ListOrders:output_type -> api.ListOrdersResponse
+	0,  // 0: order.GetOrderResponse.order:type_name -> order.Order
+	0,  // 1: order.UpdateOrderResponse.order:type_name -> order.Order
+	0,  // 2: order.ListOrdersResponse.orders:type_name -> order.Order
+	1,  // 3: order.OrderService.CreateOrder:input_type -> order.CreateOrderRequest
+	3,  // 4: order.OrderService.GetOrder:input_type -> order.GetOrderRequest
+	5,  // 5: order.OrderService.UpdateOrder:input_type -> order.UpdateOrderRequest
+	7,  // 6: order.OrderService.DeleteOrder:input_type -> order.DeleteOrderRequest
+	9,  // 7: order.OrderService.ListOrders:input_type -> order.ListOrdersRequest
+	2,  // 8: order.OrderService.CreateOrder:output_type -> order.CreateOrderResponse
+	4,  // 9: order.OrderService.GetOrder:output_type -> order.GetOrderResponse
+	6,  // 10: order.OrderService.UpdateOrder:output_type -> order.UpdateOrderResponse
+	8,  // 11: order.OrderService.DeleteOrder:output_type -> order.DeleteOrderResponse
+	10, // 12: order.OrderService.ListOrders:output_type -> order.ListOrdersResponse
 	8,  // [8:13] is the sub-list for method output_type
 	3,  // [3:8] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
