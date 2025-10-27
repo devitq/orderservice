@@ -1,0 +1,9 @@
+# compiled go binaries
+/bin/*
+
+# gitkeep files
+!.gitkeep
+
+# env files
+.env*
+!.env.template
