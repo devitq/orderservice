@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	GRPCPort int
-	LogLevel string
+	GRPCPort             int
+	GRPCEnableReflection bool
+	LogLevel             string
 }
 
 func Load() (*Config, error) {
@@ -26,6 +27,13 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 	config.GRPCPort = port
+
+	enableReflectionStr := getEnv("GRPC_ENABLE_REFLECTION", "false")
+	enableReflection, err := strconv.ParseBool(enableReflectionStr)
+	if err != nil {
+		return nil, err
+	}
+	config.GRPCEnableReflection = enableReflection
 
 	config.LogLevel = getEnv("LOG_LEVEL", "info")
 

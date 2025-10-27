@@ -12,6 +12,7 @@ import (
 	pb "orderservice/pkg/api/order"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
@@ -36,6 +37,11 @@ func New(cfg *config.Config) *Server {
 func (s *Server) RegisterServices() {
 	orderService := service.NewOrderServiceServer()
 	pb.RegisterOrderServiceServer(s.grpcServer, orderService)
+
+	if s.config.GRPCEnableReflection {
+		reflection.Register(s.grpcServer)
+		log.Println("gRPC server will start with reflection")
+	}
 }
 
 func (s *Server) Start() error {
