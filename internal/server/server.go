@@ -7,6 +7,9 @@ import (
 
 	"orderservice/internal/config"
 	"orderservice/internal/interceptor"
+
+	orderGrpcHandler "orderservice/internal/handler/grpc"
+	orderInMemory "orderservice/internal/repository/inmemory"
 	"orderservice/internal/service"
 
 	pb "orderservice/pkg/api/order"
@@ -35,8 +38,11 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) RegisterServices() {
-	orderService := service.NewOrderServiceServer()
-	pb.RegisterOrderServiceServer(s.grpcServer, orderService)
+	repo := orderInMemory.NewOrderRepository()
+	orderService := service.NewOrderService(repo)
+	orderHandler := orderGrpcHandler.NewOrderHandler(orderService)
+
+	pb.RegisterOrderServiceServer(s.grpcServer, orderHandler)
 
 	if s.config.GRPCEnableReflection {
 		reflection.Register(s.grpcServer)
