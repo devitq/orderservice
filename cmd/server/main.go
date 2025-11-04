@@ -2,6 +2,9 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"orderservice/internal/config"
 	"orderservice/internal/server"
@@ -22,7 +25,11 @@ func main() {
 		}
 	}()
 
-	log.Printf("Server is running on port %d", cfg.GRPCPort)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
 
-	select {}
+	log.Println("Shutting down server...")
+	srv.Stop()
+	log.Println("Server stopped")
 }
