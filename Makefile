@@ -26,7 +26,10 @@ generate:
 
 gen: generate
 
-protoc: generate
+generate-gw:
+	$(PROTOC) --version || (echo "protoc not found, install protoc"; exit 1)
+	$(PROTOC) --grpc-gateway_out=$(PROTO_OUT) --grpc-gateway_opt generate_unbound_methods=true \
+		$(PROTO_FILE)
 
 test:
 	$(GOTEST) ./...

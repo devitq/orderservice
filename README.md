@@ -35,6 +35,8 @@ And setup env vars according to your needs.
 ```bash
 GRPC_PORT=50051              # gRPC server port
 GRPC_ENABLE_REFLECTION=false # whether to enable gRPC reflection or not
+HTTP_HANDLER_ENABLE=false    # whether to enable HTTP gateway or not
+HTTP_PORT=8080               # HTTP gateway port
 LOG_LEVEL=info               # logging severity (debug, info, warn, error)
 ```
 

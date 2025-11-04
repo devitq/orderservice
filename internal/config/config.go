@@ -11,38 +11,44 @@ import (
 type Config struct {
 	GRPCPort             int
 	GRPCEnableReflection bool
+	EnableHTTPHandler    bool
+	HTTPPort             int
 	LogLevel             string
 }
 
 func Load() (*Config, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found: %v", err)
-	}
+	_ = godotenv.Load()
 
-	config := &Config{}
-
-	portStr := getEnv("GRPC_PORT", "50051")
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return nil, err
-	}
-	config.GRPCPort = port
-
-	enableReflectionStr := getEnv("GRPC_ENABLE_REFLECTION", "false")
-	enableReflection, err := strconv.ParseBool(enableReflectionStr)
-	if err != nil {
-		return nil, err
-	}
-	config.GRPCEnableReflection = enableReflection
-
-	config.LogLevel = getEnv("LOG_LEVEL", "info")
-
-	return config, nil
+	return &Config{
+		GRPCPort:             mustGetInt("GRPC_PORT", 50051), //nolint:mnd // false-positive
+		GRPCEnableReflection: mustGetBool("GRPC_ENABLE_REFLECTION", false),
+		EnableHTTPHandler:    mustGetBool("HTTP_HANDLER_ENABLE", false),
+		HTTPPort:             mustGetInt("HTTP_PORT", 8080), //nolint:mnd // false-positive
+		LogLevel:             getEnv("LOG_LEVEL", "info"),
+	}, nil
 }
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
+func getEnv(key, def string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
 	}
-	return defaultValue
+	return def
+}
+
+func mustGetInt(key string, def int) int {
+	val := getEnv(key, strconv.Itoa(def))
+	n, err := strconv.Atoi(val)
+	if err != nil {
+		log.Fatalf("invalid int for %s: %v", key, err)
+	}
+	return n
+}
+
+func mustGetBool(key string, def bool) bool {
+	val := getEnv(key, strconv.FormatBool(def))
+	b, err := strconv.ParseBool(val)
+	if err != nil {
+		log.Fatalf("invalid bool for %s: %v", key, err)
+	}
+	return b
 }
