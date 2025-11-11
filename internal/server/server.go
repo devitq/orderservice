@@ -11,6 +11,7 @@ import (
 	"orderservice/internal/interceptor"
 
 	grpcHandlers "orderservice/internal/handler/grpc"
+	httpHandlers "orderservice/internal/handler/http"
 	orderPostgresRepo "orderservice/internal/repository/postgres"
 	"orderservice/internal/service"
 
@@ -57,8 +58,12 @@ func runHTTPHandler(s *Server, grpcServerEndpoint *string) error {
 		return err
 	}
 
+	mux := http.NewServeMux()
+	mux.Handle("/healthz", httpHandlers.NewHealthHandler(s.db, s.redisDB))
+	mux.Handle("/", gwmux)
+
 	addr := fmt.Sprintf(":%d", s.config.HTTPPort)
-	return http.ListenAndServe(addr, gwmux)
+	return http.ListenAndServe(addr, mux)
 }
 
 func getDatabase(cfg config.Config) (*sqlx.DB, error) {
