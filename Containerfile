@@ -1,0 +1,56 @@
+ARG GOARCH=amd64
+ARG GOOS=linux
+ARG CGO_ENABLED=0
+ARG VERSION=1.0.0
+ARG BUILD_TIME=unknown
+
+# Stage 1: Build
+FROM docker.io/golang:1.24-alpine AS build
+
+ARG GOOS
+ARG GOARCH
+ARG CGO_ENABLED
+ARG VERSION
+ARG BUILD_TIME
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=${CGO_ENABLED} \
+    GOOS=${GOOS} \
+    GOARCH=${GOARCH} \
+    go build -trimpath \
+    -ldflags="-s -w -X 'main.Version=${VERSION}' -X 'main.BuildTime=${BUILD_TIME}'" \
+    -o /bin/app ./cmd/server
+
+# Stage 2: Runtime
+FROM docker.io/alpine:3.22 AS runtime
+
+ARG VERSION
+ARG BUILD_TIME
+
+RUN addgroup -S app && adduser -S -G app app
+
+WORKDIR /app
+
+COPY --from=build /bin/app /app/bin
+
+RUN chown app:app /app/bin && chmod +x /app/bin
+
+USER app
+
+EXPOSE 8080 50051
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -qO- --timeout=2 http://127.0.0.1:8080/health || exit 1
+
+LABEL org.opencontainers.image.version=${VERSION}
+LABEL org.opencontainers.image.created=${BUILD_TIME}
+
+ENTRYPOINT ["/app/bin"]
+
+CMD [""]
