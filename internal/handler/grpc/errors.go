@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 
 	"orderservice/internal/domain"
 
@@ -20,5 +21,6 @@ func mapError(err error) error {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
+	log.Printf("internal server error: %v", err)
 	return status.Error(codes.Internal, "internal server error")
 }

@@ -26,10 +26,10 @@ func (r *OrderRepository) Create(ctx context.Context, order *domain.Order) error
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, ok := r.orders[order.ID]; ok {
+	if _, ok := r.orders[order.ID.String()]; ok {
 		return domain.ErrOrderAlreadyExist
 	}
-	r.orders[order.ID] = order
+	r.orders[order.ID.String()] = order
 
 	return nil
 }
@@ -58,10 +58,10 @@ func (r *OrderRepository) Update(ctx context.Context, order *domain.Order) error
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, ok := r.orders[order.ID]; !ok {
+	if _, ok := r.orders[order.ID.String()]; !ok {
 		return domain.ErrOrderNotFound
 	}
-	r.orders[order.ID] = order
+	r.orders[order.ID.String()] = order
 
 	return nil
 }

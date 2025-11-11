@@ -22,7 +22,7 @@ func NewOrderHandler(service *service.OrderService) *OrderHandler {
 
 func mapDomainStructToHandler(order *domain.Order) *pb.Order {
 	return &pb.Order{
-		Id:       order.ID,
+		Id:       order.ID.String(),
 		Item:     order.Item,
 		Quantity: order.Quantity,
 	}
@@ -37,7 +37,7 @@ func (h *OrderHandler) CreateOrder(
 		return nil, mapError(err)
 	}
 
-	return &pb.CreateOrderResponse{Id: order.ID}, nil
+	return &pb.CreateOrderResponse{Id: order.ID.String()}, nil
 }
 
 func (h *OrderHandler) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {

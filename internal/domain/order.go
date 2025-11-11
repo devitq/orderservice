@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -13,9 +15,9 @@ var (
 )
 
 type Order struct {
-	ID       string
-	Item     string
-	Quantity int32
+	ID       uuid.UUID `db:"id"       json:"id"`
+	Item     string    `db:"item"     json:"item"`
+	Quantity int32     `db:"quantity" json:"quantity"`
 }
 
 func (o *Order) Validate() error {
@@ -25,7 +27,7 @@ func (o *Order) Validate() error {
 	if o.Quantity <= 0 {
 		return fmt.Errorf("%w: quantity must be positive", ErrInvalidOrderData)
 	}
-	if o.ID == "" {
+	if o.ID.String() == "" {
 		return fmt.Errorf("%w: ID cannot be empty", ErrInvalidOrderData)
 	}
 	return nil

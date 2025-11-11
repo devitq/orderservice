@@ -10,13 +10,15 @@ import (
 	"orderservice/internal/config"
 	"orderservice/internal/interceptor"
 
-	orderGrpcHandler "orderservice/internal/handler/grpc"
-	orderInMemory "orderservice/internal/repository/inmemory"
+	grpcHandlers "orderservice/internal/handler/grpc"
+	orderPostgresRepo "orderservice/internal/repository/postgres"
 	"orderservice/internal/service"
 
 	pb "orderservice/pkg/api/order"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -25,6 +27,8 @@ import (
 type Server struct {
 	grpcServer *grpc.Server
 	config     *config.Config
+	db         *sqlx.DB
+	redisDB    *redis.Client
 }
 
 func New(cfg *config.Config) *Server {
@@ -46,21 +50,64 @@ func runHTTPHandler(s *Server, grpcServerEndpoint *string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	mux := runtime.NewServeMux()
+	gwmux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	err := pb.RegisterOrderServiceHandlerFromEndpoint(ctx, mux, *grpcServerEndpoint, opts)
+	err := pb.RegisterOrderServiceHandlerFromEndpoint(ctx, gwmux, *grpcServerEndpoint, opts)
 	if err != nil {
 		return err
 	}
 
 	addr := fmt.Sprintf(":%d", s.config.HTTPPort)
-	return http.ListenAndServe(addr, mux)
+	return http.ListenAndServe(addr, gwmux)
+}
+
+func getDatabase(cfg config.Config) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("postgres", cfg.BuildDsn())
+	if err != nil {
+		return nil, fmt.Errorf("connect to database: %w", err)
+	}
+
+	_, err = db.Exec(orderPostgresRepo.Schema)
+	if err != nil {
+		return nil, fmt.Errorf("run schema: %w", err)
+	}
+
+	return db, nil
+}
+
+func getRedis(cfg config.Config) (*redis.Client, error) {
+	conn, err := redis.ParseURL(cfg.RedisURI)
+	client := redis.NewClient(&redis.Options{
+		Addr: conn.Addr,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("parse Redis URI: %w", err)
+	}
+
+	_, err = client.Ping(context.Background()).Result()
+	if err != nil {
+		return nil, fmt.Errorf("connect to Redis server: %w", err)
+	}
+
+	return client, nil
 }
 
 func (s *Server) RegisterServices() {
-	repo := orderInMemory.NewOrderRepository()
-	orderService := service.NewOrderService(repo)
-	orderHandler := orderGrpcHandler.NewOrderHandler(orderService)
+	db, err := getDatabase(*s.config)
+	if err != nil {
+		log.Print(err)
+	}
+	s.db = db
+
+	redisDB, err := getRedis(*s.config)
+	if err != nil {
+		log.Print(err)
+	}
+	s.redisDB = redisDB
+
+	orderRepo := orderPostgresRepo.NewOrderRepository(db, redisDB, &orderPostgresRepo.Config{CacheEnable: true})
+	orderService := service.NewOrderService(orderRepo)
+	orderHandler := grpcHandlers.NewOrderHandler(orderService)
 
 	pb.RegisterOrderServiceServer(s.grpcServer, orderHandler)
 

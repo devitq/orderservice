@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -14,6 +15,12 @@ type Config struct {
 	EnableHTTPHandler    bool
 	HTTPPort             int
 	LogLevel             string
+	DBHost               string
+	DBPort               int
+	DBUser               string
+	DBPassword           string
+	DBName               string
+	RedisURI             string
 }
 
 func Load() (*Config, error) {
@@ -25,6 +32,12 @@ func Load() (*Config, error) {
 		EnableHTTPHandler:    mustGetBool("HTTP_HANDLER_ENABLE", false),
 		HTTPPort:             mustGetInt("HTTP_PORT", 8080), //nolint:mnd // false-positive
 		LogLevel:             getEnv("LOG_LEVEL", "info"),
+		DBHost:               getEnv("POSTGRES_HOST", "localhost"),
+		DBPort:               mustGetInt("POSTGRES_PORT", 5432),
+		DBUser:               getEnv("POSTGRES_USERNAME", "postgres"),
+		DBPassword:           getEnv("POSTGRES_PASSWORD", "postgres"),
+		DBName:               getEnv("POSTGRES_DATABASE", "postgres"),
+		RedisURI:             getEnv("REDIS_URI", "redis://localhost:6379"),
 	}, nil
 }
 
@@ -51,4 +64,9 @@ func mustGetBool(key string, def bool) bool {
 		log.Fatalf("invalid bool for %s: %v", key, err)
 	}
 	return b
+}
+
+func (c Config) BuildDsn() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName)
 }

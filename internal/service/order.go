@@ -21,7 +21,7 @@ func NewOrderService(repo repository.OrderRepository) *OrderService {
 
 func (s *OrderService) Create(ctx context.Context, item string, quantity int32) (*domain.Order, error) {
 	order := &domain.Order{
-		ID:       uuid.NewString(),
+		ID:       uuid.New(),
 		Item:     item,
 		Quantity: quantity,
 	}
