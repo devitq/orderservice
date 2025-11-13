@@ -6,6 +6,10 @@ services:
       context: .
       dockerfile: Containerfile
     depends_on:
+      migrate:
+        restart: false
+        condition: service_completed_successfully
+        required: true
       postgres:
         restart: false
         condition: service_healthy
@@ -34,6 +38,24 @@ services:
     networks:
       - default
     restart: unless-stopped
+    shm_size: 4mb
+  
+  migrate:
+    build:
+      context: .
+      dockerfile: Containerfile.migrate
+    depends_on:
+      postgres:
+        restart: false
+        condition: service_healthy
+        required: true
+    env_file:
+      - path: ./infrastructure/core/.env.template
+        required: true
+      - path: ./infrastructure/core/.env
+    networks:
+      - default
+    restart: no
     shm_size: 4mb
 
   postgres:

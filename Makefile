@@ -1,9 +1,10 @@
 # Go parameters
 GOCMD=go
-GOBUILD=$(GOCMD) build
+GOBUILD=$(GOCMD) build -trimpath -ldflags="-s -w" 
 GOTEST=$(GOCMD) test
 GODOWNLOAD=$(GOCMD) mod download
 BINARY_NAME=orderservice
+MIGRATE_BINARY_NAME=orderservice-migrate
 BINARY_DIR=bin
 
 # Protobuf parameters
@@ -12,7 +13,7 @@ PROTO_DIR=api/proto
 PROTO_FILE=$(PROTO_DIR)/order.proto
 PROTO_OUT=.
 
-.PHONY: install i generate gen protoc test build run lint fmt format clean help
+.PHONY: install i generate gen generate-gw test build run migrate lint fmt format clean help
 
 install:
 	$(GODOWNLOAD)
@@ -38,8 +39,20 @@ build:
 	$(GOBUILD) -o ./$(BINARY_DIR)/$(BINARY_NAME) ./cmd/server
 	chmod +x ./$(BINARY_DIR)/$(BINARY_NAME)
 
+build-migrate:
+	$(GOBUILD) -o ./$(BINARY_DIR)/$(MIGRATE_BINARY_NAME) ./cmd/migrate
+	chmod +x ./$(BINARY_DIR)/$(MIGRATE_BINARY_NAME)
+
 run: build
 	./$(BINARY_DIR)/$(BINARY_NAME)
+
+migrate: build-migrate
+	@cmd=$(word 2,$(MAKECMDGOALS)); \
+	if [ -z "$$cmd" ]; then \
+		echo "Usage: make migrate <command>"; \
+		exit 1; \
+	fi; \
+	./$(BINARY_DIR)/$(MIGRATE_BINARY_NAME) -cmd $$cmd
 
 lint:
 	golangci-lint run -c .golangci.yaml ./...
@@ -68,3 +81,6 @@ help:
 	@echo "  clean     - Clean build artifacts"
 
 .DEFAULT_GOAL := help
+
+%:
+	@:
