@@ -13,7 +13,7 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatalf("failed to load config: %v", err)
 	}
 
 	srv := server.New(cfg)
@@ -21,7 +21,7 @@ func main() {
 
 	go func() {
 		if err := srv.Start(); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+			log.Fatalf("failed to start server: %v", err)
 		}
 	}()
 
@@ -29,7 +29,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	log.Println("shutting down server...")
 	srv.Stop()
-	log.Println("Server stopped")
+	log.Println("server stopped")
 }

@@ -37,11 +37,11 @@ func (s *OrderService) Create(ctx context.Context, item string, quantity int32) 
 	return order, nil
 }
 
-func (s *OrderService) Get(ctx context.Context, id string) (*domain.Order, error) {
+func (s *OrderService) Get(ctx context.Context, id uuid.UUID) (*domain.Order, error) {
 	return s.repo.Get(ctx, id)
 }
 
-func (s *OrderService) Update(ctx context.Context, id string, item string, quantity int32) (*domain.Order, error) {
+func (s *OrderService) Update(ctx context.Context, id uuid.UUID, item string, quantity int32) (*domain.Order, error) {
 	order, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (s *OrderService) Update(ctx context.Context, id string, item string, quant
 	return order, nil
 }
 
-func (s *OrderService) Delete(ctx context.Context, id string) error {
+func (s *OrderService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
 

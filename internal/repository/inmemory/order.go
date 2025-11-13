@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"orderservice/internal/domain"
+
+	"github.com/google/uuid"
 )
 
 type OrderRepository struct {
@@ -34,7 +36,7 @@ func (r *OrderRepository) Create(ctx context.Context, order *domain.Order) error
 	return nil
 }
 
-func (r *OrderRepository) Get(ctx context.Context, id string) (*domain.Order, error) {
+func (r *OrderRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Order, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -42,7 +44,7 @@ func (r *OrderRepository) Get(ctx context.Context, id string) (*domain.Order, er
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	order, ok := r.orders[id]
+	order, ok := r.orders[id.String()]
 	if !ok {
 		return nil, domain.ErrOrderNotFound
 	}
@@ -66,7 +68,7 @@ func (r *OrderRepository) Update(ctx context.Context, order *domain.Order) error
 	return nil
 }
 
-func (r *OrderRepository) Delete(ctx context.Context, id string) error {
+func (r *OrderRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -74,11 +76,11 @@ func (r *OrderRepository) Delete(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, ok := r.orders[id]; !ok {
+	if _, ok := r.orders[id.String()]; !ok {
 		return domain.ErrOrderNotFound
 	}
 
-	delete(r.orders, id)
+	delete(r.orders, id.String())
 
 	return nil
 }

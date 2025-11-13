@@ -17,7 +17,7 @@ func mapError(err error) error {
 	if errors.Is(err, domain.ErrOrderAlreadyExist) {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
-	if errors.Is(err, domain.ErrInvalidOrderData) {
+	if errors.Is(err, domain.ErrInvalidOrderData) || errors.Is(err, domain.ErrInvalidID) {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 

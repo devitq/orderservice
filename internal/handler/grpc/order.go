@@ -6,6 +6,8 @@ import (
 	"orderservice/internal/domain"
 	"orderservice/internal/service"
 	pb "orderservice/pkg/api/order"
+
+	"github.com/google/uuid"
 )
 
 type OrderHandler struct {
@@ -41,7 +43,12 @@ func (h *OrderHandler) CreateOrder(
 }
 
 func (h *OrderHandler) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
-	order, err := h.service.Get(ctx, req.GetId())
+	parsedID, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, domain.ErrInvalidID
+	}
+
+	order, err := h.service.Get(ctx, parsedID)
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -53,7 +60,12 @@ func (h *OrderHandler) UpdateOrder(
 	ctx context.Context,
 	req *pb.UpdateOrderRequest,
 ) (*pb.UpdateOrderResponse, error) {
-	order, err := h.service.Update(ctx, req.GetId(), req.GetItem(), req.GetQuantity())
+	parsedID, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, domain.ErrInvalidID
+	}
+
+	order, err := h.service.Update(ctx, parsedID, req.GetItem(), req.GetQuantity())
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -65,7 +77,12 @@ func (h *OrderHandler) DeleteOrder(
 	ctx context.Context,
 	req *pb.DeleteOrderRequest,
 ) (*pb.DeleteOrderResponse, error) {
-	err := h.service.Delete(ctx, req.GetId())
+	parsedID, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, domain.ErrInvalidID
+	}
+
+	err = h.service.Delete(ctx, parsedID)
 	if err != nil {
 		return nil, mapError(err)
 	}

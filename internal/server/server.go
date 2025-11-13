@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"orderservice/internal/config"
 	"orderservice/internal/interceptor"
@@ -19,10 +20,23 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // postgres driver
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+)
+
+const (
+	httpReadTimeout      = 10 * time.Second
+	httpWriteTimeout     = 10 * time.Second
+	httpIdleTimeout      = 60 * time.Second
+	redisRetryCount      = 2
+	redisMinRetryBackoff = 50 * time.Millisecond
+	redisMaxRetryBackoff = 200 * time.Millisecond
+	redisDialTimeout     = 1 * time.Second
+	redisDialerRetries   = 3
+	redisTimeout         = 2 * time.Second
 )
 
 type Server struct {
@@ -62,19 +76,21 @@ func runHTTPHandler(s *Server, grpcServerEndpoint *string) error {
 	mux.Handle("/healthz", httpHandlers.NewHealthHandler(s.db, s.redisDB))
 	mux.Handle("/", gwmux)
 
-	addr := fmt.Sprintf(":%d", s.config.HTTPPort)
-	return http.ListenAndServe(addr, mux)
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", s.config.HTTPPort),
+		Handler:      mux,
+		ReadTimeout:  httpReadTimeout,
+		WriteTimeout: httpWriteTimeout,
+		IdleTimeout:  httpIdleTimeout,
+	}
+
+	return srv.ListenAndServe()
 }
 
 func getDatabase(cfg config.Config) (*sqlx.DB, error) {
-	db, err := sqlx.Connect("postgres", cfg.BuildDsn())
+	db, err := sqlx.Connect("postgres", cfg.BuildPostgresConnStr())
 	if err != nil {
 		return nil, fmt.Errorf("connect to database: %w", err)
-	}
-
-	_, err = db.Exec(orderPostgresRepo.Schema)
-	if err != nil {
-		return nil, fmt.Errorf("run schema: %w", err)
 	}
 
 	return db, nil
@@ -83,7 +99,15 @@ func getDatabase(cfg config.Config) (*sqlx.DB, error) {
 func getRedis(cfg config.Config) (*redis.Client, error) {
 	conn, err := redis.ParseURL(cfg.RedisURI)
 	client := redis.NewClient(&redis.Options{
-		Addr: conn.Addr,
+		Addr:               conn.Addr,
+		MaxRetries:         redisRetryCount,
+		MinRetryBackoff:    redisMinRetryBackoff,
+		MaxRetryBackoff:    redisMaxRetryBackoff,
+		DialTimeout:        redisDialTimeout,
+		DialerRetries:      redisDialerRetries,
+		DialerRetryTimeout: redisDialTimeout,
+		ReadTimeout:        redisTimeout,
+		WriteTimeout:       redisTimeout,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("parse Redis URI: %w", err)
@@ -131,14 +155,14 @@ func (s *Server) Start() error {
 
 	if s.config.EnableHTTPHandler {
 		go func() {
-			log.Printf("Starting HTTP gateway on port %d", s.config.HTTPPort)
+			log.Printf("starting HTTP gateway on port %d", s.config.HTTPPort)
 			if err := runHTTPHandler(s, &addr); err != nil {
 				log.Printf("HTTP gateway failed: %v", err)
 			}
 		}()
 	}
 
-	log.Printf("Starting gRPC server on port %d", s.config.GRPCPort)
+	log.Printf("starting gRPC server on port %d", s.config.GRPCPort)
 
 	if err := s.grpcServer.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)

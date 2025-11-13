@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strconv"
 
@@ -33,7 +34,7 @@ func Load() (*Config, error) {
 		HTTPPort:             mustGetInt("HTTP_PORT", 8080), //nolint:mnd // false-positive
 		LogLevel:             getEnv("LOG_LEVEL", "info"),
 		DBHost:               getEnv("POSTGRES_HOST", "localhost"),
-		DBPort:               mustGetInt("POSTGRES_PORT", 5432),
+		DBPort:               mustGetInt("POSTGRES_PORT", 5432), //nolint:mnd // false-positive
 		DBUser:               getEnv("POSTGRES_USERNAME", "postgres"),
 		DBPassword:           getEnv("POSTGRES_PASSWORD", "postgres"),
 		DBName:               getEnv("POSTGRES_DATABASE", "postgres"),
@@ -66,7 +67,12 @@ func mustGetBool(key string, def bool) bool {
 	return b
 }
 
-func (c Config) BuildDsn() string {
+func (c Config) BuildPostgresConnStr() string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName)
+}
+
+func (c Config) BuildPostgresDSN() string {
+	return fmt.Sprintf("postgresql://%s:%s@%s/%s?sslmode=disable",
+		c.DBUser, c.DBPassword, net.JoinHostPort(c.DBHost, strconv.Itoa(c.DBPort)), c.DBName)
 }

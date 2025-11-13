@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,24 +11,19 @@ import (
 
 	"orderservice/internal/domain"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // postgres driver
 	"github.com/redis/go-redis/v9"
 )
-
-//go:embed schema.sql
-var Schema string
 
 const (
 	orderCachePrefix = "order:"
 	cacheTTL         = 5 * time.Minute
-	maxCacheRetries  = 2
-	cacheRetryDelay  = 100 * time.Millisecond
 )
 
 type OrderRepository struct {
 	db          *sqlx.DB
-	cache       *redis.Client
+	redisClient *redis.Client
 	cacheEnable bool
 }
 
@@ -46,7 +40,7 @@ func NewOrderRepository(db *sqlx.DB, redisClient *redis.Client, config *Config) 
 
 	return &OrderRepository{
 		db:          db,
-		cache:       redisClient,
+		redisClient: redisClient,
 		cacheEnable: config.CacheEnable,
 	}
 }
@@ -77,19 +71,19 @@ func (r *OrderRepository) Create(ctx context.Context, order *domain.Order) error
 
 	if r.cacheEnable {
 		if err := r.setCacheWithRetry(ctx, order); err != nil {
-			log.Printf("WARN: cache set error for order %s: %v", order.ID, err)
+			log.Printf("warn: cache set error for order %s: %v", order.ID, err)
 		}
 	}
 
 	return nil
 }
 
-func (r *OrderRepository) Get(ctx context.Context, id string) (*domain.Order, error) {
+func (r *OrderRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Order, error) {
 	if r.cacheEnable {
-		if order, err := r.getFromCache(ctx, id); err == nil {
+		if order, err := r.getFromCache(ctx, id.String()); err == nil {
 			return order, nil
 		} else if !errors.Is(err, redis.Nil) {
-			log.Printf("WARN: cache get error for order %s: %v", id, err)
+			log.Printf("warn: cache get error for order %s: %v", id, err)
 		}
 	}
 
@@ -109,7 +103,7 @@ func (r *OrderRepository) Get(ctx context.Context, id string) (*domain.Order, er
 
 	if r.cacheEnable {
 		if err := r.setCacheWithRetry(ctx, &order); err != nil {
-			log.Printf("WARN: cache set error for order %s: %v", id, err)
+			log.Printf("warn: cache set error for order %s: %v", id, err)
 		}
 	}
 
@@ -149,14 +143,14 @@ func (r *OrderRepository) Update(ctx context.Context, order *domain.Order) error
 
 	if r.cacheEnable {
 		if err := r.setCacheWithRetry(ctx, order); err != nil {
-			log.Printf("WARN: cache set error for order %s: %v", order.ID, err)
+			log.Printf("warn: cache set error for order %s: %v", order.ID, err)
 		}
 	}
 
 	return nil
 }
 
-func (r *OrderRepository) Delete(ctx context.Context, id string) error {
+func (r *OrderRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
@@ -186,7 +180,7 @@ func (r *OrderRepository) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("commit transaction: %w", err)
 	}
 
-	r.invalidateCache(ctx, id)
+	r.invalidateCache(ctx, id.String())
 	return nil
 }
 
@@ -206,14 +200,14 @@ func (r *OrderRepository) List(ctx context.Context) ([]*domain.Order, error) {
 }
 
 func (r *OrderRepository) getFromCache(ctx context.Context, id string) (*domain.Order, error) {
-	data, err := r.cache.Get(ctx, r.cacheKey(id)).Bytes()
+	data, err := r.redisClient.Get(ctx, r.cacheKey(id)).Bytes()
 	if err != nil {
 		return nil, err
 	}
 
 	var order domain.Order
 	if err := json.Unmarshal(data, &order); err != nil {
-		r.cache.Del(ctx, r.cacheKey(id))
+		r.redisClient.Del(ctx, r.cacheKey(id))
 		return nil, err
 	}
 
@@ -228,16 +222,7 @@ func (r *OrderRepository) setCacheWithRetry(ctx context.Context, order *domain.O
 
 	key := r.cacheKey(order.ID.String())
 
-	for i := range maxCacheRetries {
-		err = r.cache.Set(ctx, key, data, cacheTTL).Err()
-		if err == nil {
-			return nil
-		}
-
-		if i < maxCacheRetries-1 {
-			time.Sleep(cacheRetryDelay)
-		}
-	}
+	err = r.redisClient.Set(ctx, key, data, cacheTTL).Err()
 
 	return err
 }
@@ -248,11 +233,11 @@ func (r *OrderRepository) invalidateCache(_ context.Context, id string) {
 	}
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), r.redisClient.Options().ReadTimeout)
 		defer cancel()
 
-		if err := r.cache.Del(ctx, r.cacheKey(id)).Err(); err != nil {
-			log.Printf("WARN: cache invalidation failed for order %s: %v", id, err)
+		if err := r.redisClient.Del(ctx, r.cacheKey(id)).Err(); err != nil {
+			log.Printf("warn: cache invalidation failed for order %s: %v", id, err)
 		}
 	}()
 }
