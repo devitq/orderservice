@@ -20,13 +20,7 @@ func NewOrderService(repo repository.OrderRepository) *OrderService {
 }
 
 func (s *OrderService) Create(ctx context.Context, item string, quantity int32) (*domain.Order, error) {
-	order := &domain.Order{
-		ID:       uuid.New(),
-		Item:     item,
-		Quantity: quantity,
-	}
-
-	err := order.Validate()
+	order, err := domain.NewOrder(uuid.New(), item, quantity)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +36,7 @@ func (s *OrderService) Get(ctx context.Context, id uuid.UUID) (*domain.Order, er
 }
 
 func (s *OrderService) Update(ctx context.Context, id uuid.UUID, item string, quantity int32) (*domain.Order, error) {
-	order, err := s.repo.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	order.Item = item
-	order.Quantity = quantity
-
-	err = order.Validate()
+	order, err := domain.NewOrder(id, item, quantity)
 	if err != nil {
 		return nil, err
 	}

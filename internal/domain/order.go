@@ -14,6 +14,21 @@ var (
 	ErrInvalidOrderData  = errors.New("invalid order data")
 )
 
+func NewOrder(id uuid.UUID, item string, quantity int32) (*Order, error) {
+	order := &Order{
+		ID: id,
+		Item: item,
+		Quantity: quantity,
+	}
+
+	err := order.Validate()
+	if err != nil {
+		return nil, err
+	}
+	
+	return order, nil
+}
+
 type Order struct {
 	ID       uuid.UUID `db:"id"       json:"id"`
 	Item     string    `db:"item"     json:"item"`
