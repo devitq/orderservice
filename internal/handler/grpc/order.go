@@ -62,7 +62,7 @@ func (h *OrderHandler) UpdateOrder(
 ) (*pb.UpdateOrderResponse, error) {
 	parsedID, err := uuid.Parse(req.GetId())
 	if err != nil {
-		return nil, domain.ErrInvalidID
+		return nil, mapError(domain.ErrInvalidID)
 	}
 
 	order, err := h.service.Update(ctx, parsedID, req.GetItem(), req.GetQuantity())

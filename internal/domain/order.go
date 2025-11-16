@@ -3,8 +3,8 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -14,10 +14,16 @@ var (
 	ErrInvalidOrderData  = errors.New("invalid order data")
 )
 
+type Order struct {
+	ID       uuid.UUID `db:"id"       json:"id"       validate:"required"`
+	Item     string    `db:"item"     json:"item"     validate:"required"`
+	Quantity int32     `db:"quantity" json:"quantity" validate:"required,gt=0"`
+}
+
 func NewOrder(id uuid.UUID, item string, quantity int32) (*Order, error) {
 	order := &Order{
-		ID: id,
-		Item: item,
+		ID:       id,
+		Item:     item,
 		Quantity: quantity,
 	}
 
@@ -25,25 +31,12 @@ func NewOrder(id uuid.UUID, item string, quantity int32) (*Order, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return order, nil
 }
 
-type Order struct {
-	ID       uuid.UUID `db:"id"       json:"id"`
-	Item     string    `db:"item"     json:"item"`
-	Quantity int32     `db:"quantity" json:"quantity"`
-}
-
 func (o *Order) Validate() error {
-	if strings.TrimSpace(o.Item) == "" {
-		return fmt.Errorf("%w: item cannot be empty", ErrInvalidOrderData)
-	}
-	if o.Quantity <= 0 {
-		return fmt.Errorf("%w: quantity must be positive", ErrInvalidOrderData)
-	}
-	if o.ID.String() == "" {
-		return fmt.Errorf("%w: ID cannot be empty", ErrInvalidOrderData)
-	}
-	return nil
+	validate := validator.New()
+
+	return fmt.Errorf("%w: %w", ErrInvalidOrderData, validate.Struct(o))
 }
