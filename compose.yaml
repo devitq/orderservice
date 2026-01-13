@@ -39,7 +39,7 @@ services:
       - default
     restart: unless-stopped
     shm_size: 4mb
-  
+
   migrate:
     build:
       context: .
